@@ -49,6 +49,21 @@ pip install -r requirements.txt
 Put your MRI data and labels in the **data_org/** and **labels_org** folders respectively
 
 
+## Preprocessing
+Preprocessing details can be checked in Li's Github: https://github.com/hongweilibran/claustrum_multi_view
+
+1. Resampling the MR scans to 1 mm resolution.
+```bash
+python resampler.py
+```
+1. Skull-stripping
+```bash
+chmod +x skull_stripping.sh
+./skull_stripping.sh
+```
+1. (I did not do this) "Image denoising using an adaptive nonlocal means filter for 3D MRI (ANLM, in Matlab). Unfortunately, we did not find the python version for this step. The default setting in Matlab was used in our work." -- From author's GitHub 
+
+
 ## Test
 ```bash
 python test.py
