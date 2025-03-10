@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     # Downsample labels from 0.5mm to 1mm
     org_mask_data = 'labels_org/'
-    org_mask_data_downsapled = 'labels_downsampled_1mm/'
+    org_mask_data_downsapled = 'labels_org_downsampled_1mm/'
     mask_files = sorted([os.path.join(org_mask_data, f) for f in os.listdir(org_mask_data) if f.endswith(".nii.gz") or f.endswith(".nii")])
     print(f"What the masks files need to be downsampled: {mask_files}")
     for mask_file in mask_files:
