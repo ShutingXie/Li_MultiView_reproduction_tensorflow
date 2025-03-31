@@ -181,17 +181,27 @@ def post_processing(input_array, ori_size, orient_1):
     output_array = np.transpose(output_array, inv_orient)
     return output_array
 
+
+def anatomically_consistent_postprocessing(input_array, ori_size, orient_1, removal_ratio=0.2):
+    """
+    Based on the original post_processing results, the false positives are 
+    removed from the slices with the first and last removal_ratio ratios, that is, all the segmentation results in these slices are set to 0.
+    """
+    output_array = post_processing(input_array, ori_size, orient_1)
+
+    num_slices = output_array.shape[0]
+    m = int(removal_ratio * num_slices)
+
+    output_array[:m, :, :] = 0
+    output_array[-m:, :, :] = 0
+    
+    return output_array
+
+
 def visualize_image_and_mask(image_volume, mask_volume, num_slices=30, output_dir='visualization_output/overlay', view='coronal'):
     """
     Randomly select a number of slices from the image_volume and its corresponding mask_volume,
     display them side by side, and save the visualizations as separate images.
-
-    Parameters:
-        image_volume (np.array): Preprocessed image volume of shape (N, H, W, 1).
-        mask_volume (np.array): Corresponding binary mask volume of shape (N, H, W, 1).
-        num_slices (int): Number of random slices to visualize.
-        output_dir (str): Base folder to save the visualization images.
-        view (str): String indicating the view (e.g., 'coronal' or 'axial').
     """
     # ensure output folder exists
     view_output_dir = os.path.join(output_dir, view)
@@ -256,7 +266,7 @@ if __name__ == "__main__":
     mri_files = sorted([os.path.join(input_data_path, f) for f in os.listdir(input_data_path) if f.endswith(".nii.gz") or f.endswith(".nii")])
     print(mri_files)
 
-    # Pass through each downsampled MRI data to make predictions
+    # Pass through each MRI data to make predictions
     for file_index, mri_file in enumerate(mri_files):
         print(mri_file)
         
@@ -353,8 +363,11 @@ if __name__ == "__main__":
         pred_a = (pred_1a + pred_2a + pred_3a) / 3 # Fuse multiple predictions
 
         # Transform them to their original size and orientations
-        pred_1_post = post_processing(pred_c, ori_size_c, orient_c)
-        pred_2_post = post_processing(pred_a, ori_size_a, orient_a)
+        # pred_1_post = post_processing(pred_c, ori_size_c, orient_c)
+        # pred_2_post = post_processing(pred_a, ori_size_a, orient_a)
+        pred_1_post = anatomically_consistent_postprocessing(pred_c, ori_size_c, orient_c, removal_ratio=0.2)
+        pred_2_post = anatomically_consistent_postprocessing(pred_a, ori_size_a, orient_a, removal_ratio=0.2)
+
             
         # Ensemble of two views
         ####################################################################################
@@ -364,7 +377,7 @@ if __name__ == "__main__":
         # pred_final[pred_final >= 0.4] = 1.
         # pred_final[pred_final < 0.4] = 0.
         
-        # I rewrited the following two lines 
+        # I rewrited the following two lines in order to make the threshold value adjustable
         # pred_final[pred_final >= threshold] = 1.
         # pred_final[pred_final < threshold] = 0.
         ####################################################################################
